@@ -29,8 +29,8 @@ class FlashcardGen:
     question: str
     answer: str
 
-''' LLM Helpers for Content Analysis'''
 
+''' LLM Helpers for Content Analysis'''
 def openai_client():
     if not _OPENAI_IS_AVAILABLE:
         raise ImportError("Error‼️ OpenAI is not available.")
@@ -52,4 +52,20 @@ def gemini_client():
         raise ValueError("Error‼️ Google API key not found in environment variables.")
         return None
     gemini.configure(api_key=api_key)
-    return gemini
+    return gemini.GenrativeModel("gemini-1.5-flash")
+
+def call_openai(prompt:str, system: str) -> str | None:
+    client = openai_client()
+    if client is None:
+        return None
+    client_response = client.chat.completions.create(
+        model = "gpt-5-chat-latest", 
+        messages = [
+            {"role": "system", "content": system},
+            {"role": "user", "content": prompt},
+        ],
+    )
+        temperature=0.7, # temperature setting for response creativity
+    return client_response.choices[0].message.content.strip()
+
+
