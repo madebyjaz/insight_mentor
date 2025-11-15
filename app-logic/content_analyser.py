@@ -93,7 +93,11 @@ def llm_call(prompt: str, system: str, provider: str = "openai") -> str:
         text = call_gemini(prompt, system)
         if text is None:
             text = call_openai(prompt, system)
-    
+
+    else:
+        if text is None:
+            raise ValueError("Error‼️ No valid LLM provider available.")
+        return textwrap.shorten(prompt, width = 600, placeholder = "...")       # Last resort fallback to limit crashes
     return text
 
 # Returns a student-friendly summary of the uploaded content
