@@ -68,4 +68,30 @@ def call_openai(prompt:str, system: str) -> str | None:
     )
     return client_response.choices[0].message.content.strip()
 
+def call_gemini(prompt:str, system: str) -> str | None:
+    model = gemini_client()
+    if model is None:
+        return None
+    full_prompt = f"System:  {system} \n\nUser:  {prompt}"
+    client_response = model.generate_content(full_prompt)
 
+    if not client_response or not getattr(client_response, "text", None):
+        return None
+    return client_response.text.strip()
+
+# help function to call LLM based on provider chosen
+def llm_call(prompt: str, system: str, provider: str = "openai") -> str:
+    ''' If a user has chosen a specific LLM provider, try to use that one. If specified provider is unavailable, fall back to the othe provider.
+    '''
+
+    text: str | None = None
+    if provider == "openai":
+        text = call_openai(prompt, system)
+        if text is None:
+            text = call_gemini(prompt, system)
+    elif provider == "gemini":
+        text = call_gemini(prompt, system)
+        if text is None:
+            text = call_openai(prompt, system)
+    
+    return text
