@@ -1,4 +1,4 @@
-#!/Users/jazzlyn/CS/girlies-hackathon/imentor/bin/python3.13
+#!/Users/jazzlyn/CS/girlies-hackathon/insight_mentor/imentor/bin/python3.13
 import sys
 from pip._internal.cli.main import main
 if __name__ == '__main__':

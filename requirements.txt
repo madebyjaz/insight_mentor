@@ -1,10 +1,10 @@
 #main environments 
 streamlit
 openai
-google-generativedai
-python-dotenv
-tiktoken
+google-generativeai 
+python-dotenv 
+tiktoken 
 
 # optional dependencies for enhanced functionality
-pydantic
+pydantic 
 requests
