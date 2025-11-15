@@ -95,3 +95,18 @@ def llm_call(prompt: str, system: str, provider: str = "openai") -> str:
             text = call_openai(prompt, system)
     
     return text
+
+# Returns a student-friendly summary of the uploaded content
+def summarize_content(content: str, provider: str = "gemini") -> str:
+    system_prompt = "You are an educational assistant that creates clear, concise student-friendly summaries of educational content."
+
+    prompt_text = ("Summarize the following content in a way that is easy for a college student to understand:\n\n"
+                f""" Requirements:
+                - Focus on key concepts/main ideas, define important terms, and explain relationships between ideas.
+                - Use simple, clear language and avoid jargon.
+                - Keep the summary concise (around 400 - 600 words).
+                - Structure the summary with short paragraphs or bullet points for readability.
+                \n\nContent:\n{content}""")
+    
+    summary_result = llm_call(prompt_text, system_prompt, provider = provider)
+    return summary_result
