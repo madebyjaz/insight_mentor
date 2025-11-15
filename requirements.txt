@@ -1,0 +1,10 @@
+#main environments 
+streamlit
+openai
+google-generativedai
+python-dotenv
+tiktoken
+
+# optional dependencies for enhanced functionality
+pydantic
+requests
