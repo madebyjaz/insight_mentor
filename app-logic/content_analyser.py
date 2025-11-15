@@ -64,8 +64,8 @@ def call_openai(prompt:str, system: str) -> str | None:
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
         ],
-    )
         temperature=0.7, # temperature setting for response creativity
+    )
     return client_response.choices[0].message.content.strip()
 
 
