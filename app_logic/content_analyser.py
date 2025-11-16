@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass
 from typing import List, Optional
 
+import re
+import textwrap
 import os
 
 
@@ -12,8 +14,7 @@ try:
     _OPENAI_IS_AVAILABLE = True
 except ImportError:
     _OPENAI_IS_AVAILABLE = False
-    OpenAI = None # ignoring 
-    raise ImportError("Error‼️ OpenAI library is not installed. Please install the dependency to use OpenAI features. ")
+    OpenAI = None  # Will raise error if actually used
 
 # for Google Gemini support
 try:
@@ -21,8 +22,7 @@ try:
     _GEMINI_IS_AVAILABLE = True
 except ImportError:
     _GEMINI_IS_AVAILABLE = False
-    gemini = None # ignoring 
-    raise ImportError("Error‼️ Google Gemini library is not installed. Please install the dependency to use Gemini features. ")
+    gemini = None  # Will raise error if actually used
 
 @dataclass
 class FlashcardGen:
@@ -52,14 +52,14 @@ def gemini_client():
         raise ValueError("Error‼️ Google API key not found in environment variables.")
         return None
     gemini.configure(api_key=api_key)
-    return gemini.GenrativeModel("gemini-1.5-flash")
+    return gemini.GenerativeModel("gemini-flash-latest")
 
 def call_openai(prompt:str, system: str) -> str | None:
     client = openai_client()
     if client is None:
         return None
     client_response = client.chat.completions.create(
-        model = "gpt-5-chat-latest", 
+        model = "gpt-4o-mini",  # Using gpt-4o-mini for cost-effectiveness
         messages = [
             {"role": "system", "content": system},
             {"role": "user", "content": prompt},
@@ -80,7 +80,7 @@ def call_gemini(prompt:str, system: str) -> str | None:
     return client_response.text.strip()
 
 # help function to call LLM based on provider chosen
-def llm_call(prompt: str, system: str, provider: str = "openai") -> str:
+def llm_call(prompt: str, system: str, provider: str = "gemini") -> str:
     ''' If a user has chosen a specific LLM provider, try to use that one. If specified provider is unavailable, fall back to the othe provider.
     '''
 
@@ -114,3 +114,87 @@ def summarize_content(content: str, provider: str = "gemini") -> str:
     
     summary_result = llm_call(prompt_text, system_prompt, provider = provider)
     return summary_result
+
+def extract_concepts(
+    text: str,
+    max_concepts: int = 12,
+    provider: str = "gemini",
+) -> List[str]:
+    """
+    Extract key concepts/terms from the text.
+    """
+    system = (
+        "You extract key concepts and terms from study materials for college students."
+    )
+    prompt = (
+        "List the most important concepts, terms, or ideas from the following text.\n"
+        "Return them as a simple bullet list, one concept per line.\n"
+        f"Text:\n{text}"
+    )
+
+    raw = llm_call(prompt, system, provider=provider)
+    lines = [line.strip() for line in raw.splitlines() if line.strip()]
+
+    concepts: List[str] = []
+    for line in lines:
+        # Strip bullet characters
+        line = re.sub(r"^[\-\*\d\.\)\s]+", "", line)
+        if line and line not in concepts:
+            concepts.append(line)
+
+    return concepts[:max_concepts]
+
+
+def generate_flashcards(
+    text: str,
+    concepts: List[str],
+    max_cards: int = 8,
+    provider: str = "gemini",
+) -> List[FlashcardGen]:
+    """
+    Generate flashcards based on the text and extracted concepts.
+    """
+    if not concepts:
+        return []
+
+    system = (
+        "You are an expert at making flashcards for college students. "
+        "You create short, focused questions and answers."
+    )
+    concept_str = ", ".join(concepts)
+    prompt = (
+        "Create flashcards for a college student based on the following text and key concepts.\n\n"
+        f"Concepts: {concept_str}\n\n"
+        "Text:\n"
+        f"{text}\n\n"
+        "Return them in the format:\n"
+        "Q1: ...\nA1: ...\nQ2: ...\nA2: ...\n"
+        "Keep questions short and specific. Answers should be 1–3 sentences.\n"
+        f"Generate at most {max_cards} cards."
+    )
+
+    raw = llm_call(prompt, system, provider=provider)
+
+    # Parse Q/A pairs
+    cards: List[FlashcardGen] = []
+    pattern = re.compile(r"Q\d+:\s*(.+?)\s*A\d+:\s*(.+?)(?=Q\d+:|$)", re.DOTALL)
+    for match in pattern.finditer(raw):
+        q = match.group(1).strip()
+        a = match.group(2).strip()
+        if q and a:
+            cards.append(FlashcardGen(question=q, answer=a))
+
+    # If parsing failed, fall back to a simple template
+    if not cards:
+        for i, c in enumerate(concepts[:max_cards], start=1):
+            cards.append(
+                FlashcardGen(
+                    question=f"What is {c}?",
+                    answer=(
+                        f"{c} is a key concept discussed in the material. "
+                        "(Replace with a better answer using the LLM.)"
+                    ),
+                )
+            )
+
+    return cards[:max_cards]

@@ -8,3 +8,4 @@ tiktoken
 # optional dependencies for enhanced functionality
 pydantic 
 requests
+PyPDF2
