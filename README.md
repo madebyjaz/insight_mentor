@@ -1,5 +1,4 @@
-# 📚 Insight Mentor
-### AI-powered study notes, flashcards & personalized mentorship  
+# 📚 Insight Mentor 
 
 <br/>
 
