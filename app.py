@@ -2,6 +2,7 @@ import streamlit as st
 from typing import Dict, List
 
 from app_logic.content_analyser import (
+    llm_call,
     summarize_content,
     extract_concepts,
     generate_flashcards,
@@ -485,11 +486,11 @@ with col_input:
 
 # ---------------------- Output Column ----------------------
 with col_output:
-    st.subheader("📌 Summary")
+    st.subheader("📌 Study Notes")
     if st.session_state.summary:
         st.write(st.session_state.summary)
     else:
-        st.info("Upload your topics and generate Study Notes to see it here.")
+        st.info("Upload your lecture notes & other topics to generate Study Notes & see it here.")
 
     st.subheader("🧩 Key Concepts")
     if st.session_state.concepts:
@@ -528,3 +529,178 @@ with col_output:
             st.progress(min(max(score, 0.0), 1.0))
     else:
         st.info("Mastery scores will appear after you generate plans & quizzes.")
+
+ # -------------------------------------------------------------------------
+    # Prompt Coach – major-specific example prompts
+    # -------------------------------------------------------------------------
+    st.markdown("---")
+    st.subheader("🧠 Prompt Tutor – Ask Better Questions About Your Notes")
+
+    if not st.session_state.raw_text:
+        st.info("Upload your study materials & generate Study Notes first to see prompt ideas.")
+    else:
+        st.markdown(
+            "Good prompts usually include: **role + task + context + output format**.\n"
+            "Pick your major (or the closest one) to see smart example prompts you can use with your notes."
+        )
+
+        major = st.selectbox(
+            "Choose your major (or closest field):",
+            [
+                "Computer Science",
+                "Nursing",
+                "Business / Management",
+                "Psychology",
+                "Biology / Pre-Med",
+                "Chemistry",
+                "Math",
+                "Engineering",
+                "Law / Criminal Justice",
+                "Arts / Humanities",
+                "General / Other",
+            ],
+        )
+
+        major_prompts: Dict[str, Dict[str, str]] = {
+            "Computer Science": {
+                "Explain core concepts simply":
+                    "Explain these notes like you’re a senior software engineer teaching an intern. "
+                    "Use simple analogies, text-based diagrams, and real-world coding examples.",
+                "Algorithms / data structures focus":
+                    "Identify the algorithms or data structures mentioned in these notes and explain when to use each one. "
+                    "Give at least one coding example per concept.",
+                "Interview-style practice":
+                    "Based on these notes, create 5 technical interview–style questions and include ideal answers with time and space complexity where relevant.",
+                "System design thinking":
+                    "Based on this material, describe how the concepts would fit into a real system design. Include components, data flow, and tradeoffs.",
+            },
+            "Nursing": {
+                "Clinical explanation":
+                    "Explain these notes as if you’re teaching a first-year nursing student during clinicals. "
+                    "Include symptoms, assessment steps, and safety precautions.",
+                "NCLEX-style questions":
+                    "Turn these notes into NCLEX-style multiple choice questions. For each question, provide rationales for why each answer is correct or incorrect.",
+                "Care plan creation":
+                    "Create a patient care plan from these notes. Include assessment, priority nursing diagnoses, interventions, and expected outcomes.",
+                "Clinical scenario practice":
+                    "Create a real-world clinical scenario based on these notes and ask me 3 critical thinking questions about it.",
+            },
+            "Business / Management": {
+                "Explain with real companies":
+                    "Explain the business concepts in these notes using real-world examples from well-known companies. "
+                    "Keep it practical and easy to understand.",
+                "Case study mode":
+                    "Turn these notes into a business case study with a problem statement, stakeholders, constraints, and possible strategies.",
+                "Exam-style questions":
+                    "Produce 5 short-answer exam questions based on these notes, along with model answers.",
+                "Cross-functional thinking":
+                    "Show how these notes apply to marketing, finance, and operations. Give one concrete example for each area.",
+            },
+            "Psychology": {
+                "Everyday behavior examples":
+                    "Explain these psychological concepts using real-world behaviors and examples from everyday life.",
+                "Compare and contrast theories":
+                    "Identify theories in these notes that are often confused. Create a compare/contrast chart with key differences and memory tricks.",
+                "Research design":
+                    "Turn these notes into a research hypothesis and describe how you would design an experiment to test it.",
+                "Reflective questions":
+                    "Generate 3 reflective questions that help me connect these psychological concepts to personal experience.",
+            },
+            "Biology / Pre-Med": {
+                "Analogy-based explanation":
+                    "Explain these biology concepts using analogies (for example, a cell is like a factory). "
+                    "Focus on what happens, where it happens, and why it matters.",
+                "ASCII pathway diagram":
+                    "Create a simple ASCII diagram that represents the biological process described in these notes. Label each step clearly.",
+                "MCAT-style questions":
+                    "Turn these notes into 3 MCAT-style questions with detailed reasoning for each answer.",
+                "Pathway breakdown":
+                    "Break down the biological pathway in these notes into inputs, steps, outputs, and regulation points.",
+            },
+            "Chemistry": {
+                "Mechanism explanation":
+                    "Explain the chemical reaction mechanisms in these notes using step-by-step descriptions as if drawing curly arrows.",
+                "Lab prep and safety":
+                    "Based on these notes, describe the key safety risks, PPE, and proper lab procedures to follow.",
+                "Stoichiometry / reaction practice":
+                    "Turn the concepts in these notes into 5 stoichiometry or reaction-mechanism quiz questions with answers.",
+            },
+            "Math": {
+                "Intuitive understanding":
+                    "Explain these mathematical ideas using geometric intuition and simple visual analogies.",
+                "Practice problems with solutions":
+                    "Generate 5 practice problems similar to the concepts in these notes and include full worked solutions.",
+                "Proof techniques":
+                    "Identify the proof techniques implied in these notes and show one clear example of each technique using similar content.",
+            },
+            "Engineering": {
+                "Systems view":
+                    "Explain how the concepts in these notes fit into an engineering system. Include components, forces/flows, and potential failure points.",
+                "Engineering problem set":
+                    "Create 3 engineering problems based on this material and include step-by-step solutions.",
+                "Real-world applications":
+                    "Give real-world engineering applications for each major concept in these notes.",
+            },
+            "Law / Criminal Justice": {
+                "Plain-language explanation":
+                    "Explain the legal concepts in these notes using real case examples and plain language.",
+                "IRAC practice":
+                    "Turn these notes into 3 IRAC-style legal analysis exercises. For each, provide a brief model answer.",
+                "Essay-style exam prep":
+                    "Generate 5 essay-style exam questions from these notes and include a short outline for each ideal answer.",
+            },
+            "Arts / Humanities": {
+                "Theme interpretation":
+                    "Explain the main themes in these notes and how they relate to larger historical or cultural contexts.",
+                "Essay prompt and thesis help":
+                    "Create 3 essay prompts based on these notes, along with sample thesis statements I could use.",
+                "Compare to other works":
+                    "Compare the ideas in these notes to another major work or thinker in the field, pointing out similarities and differences.",
+            },
+            "General / Other": {
+                "Explain simply":
+                    "You are a friendly tutor. Explain the most important ideas from these notes in simple terms that a first-year college student could understand. Use short bullet points and one real-life example.",
+                "Exam-like practice":
+                    "Create 3–5 exam-style questions based on these notes and include model answers.",
+                "Flashcards from notes":
+                    "Create flashcards from these notes. Format them as 'Q: ...' and 'A: ...'. Focus on one concept or definition per card.",
+                "Deep dive on a confusing concept":
+                    "I am confused about one key concept in these notes. Ask me which one, then explain it in three levels: ELI5, normal explanation, and exam-level detail, followed by 2 practice questions.",
+            },
+        }
+
+        prompts_for_major = major_prompts.get(major, major_prompts["General / Other"])
+
+        for label, prompt_text in prompts_for_major.items():
+            with st.expander(label):
+                st.code(prompt_text, language="markdown")
+
+        st.markdown("---")
+        st.markdown("### Make it your own! ✍️")
+
+        custom_prompt = st.text_area(
+            "Need help better understanding a certain topic? Ask me a question (and I'll answer it best I can using the updated docs you provided):",
+            height=120,
+            placeholder="Example: Explain the most confusing part of these notes and quiz me on it.",
+        )
+
+        if st.button("Help Me Learn More Using My Notes 💜"):
+            if not custom_prompt.strip():
+                st.warning("Write a prompt first.")
+            else:
+                provider_key = (
+                    "openai" if st.session_state.model_provider == "OpenAI" else "gemini"
+                )
+                with st.spinner(
+                    f"Asking {st.session_state.model_provider} using your custom prompt…"
+                ):
+                    system_msg = "You are a helpful study tutor for college students."
+                    full_prompt = (
+                        f"{custom_prompt}\n\n"
+                        "Here are my notes:\n"
+                        f"{st.session_state.raw_text}"
+                    )
+                    response = llm_call(full_prompt, system_msg, provider=provider_key)
+
+                st.subheader("🤖 Insight Mentor's Response")
+                st.write(response)
