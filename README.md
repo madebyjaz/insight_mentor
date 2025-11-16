@@ -113,7 +113,7 @@ The system automatically handles API calls, rate limiting, and error recovery. U
 ## 🧪 Using Insight Mentor
 Not sure how a feature works? 
 
-[Visit the project’s GitBook for full documentation →](https://your-gitbook-url)
+[Visit the project’s GitBook for full documentation →](https://insightmentor.gitbook.io/insightmentor-docs/)
 
 ---
 
