@@ -42,9 +42,42 @@ st.markdown("""
         --accent-glow: rgba(124, 58, 237, 0.3);
     }
     
-    /* Main app background */
+    /* Main app background - Dynamic gradient with attention-holding colors */
     .stApp {
-        background: linear-gradient(180deg, #0f172a 0%, #1e293b 100%);
+        background: 
+            radial-gradient(ellipse at top left, rgba(124, 58, 237, 0.15) 0%, transparent 50%),
+            radial-gradient(ellipse at top right, rgba(236, 72, 153, 0.12) 0%, transparent 50%),
+            radial-gradient(ellipse at bottom left, rgba(59, 130, 246, 0.1) 0%, transparent 50%),
+            linear-gradient(135deg, #0a0e27 0%, #1a1038 25%, #0f172a 50%, #1e1b4b 75%, #0d1224 100%);
+        background-size: 100% 100%;
+        background-attachment: fixed;
+    }
+    
+    /* Subtle animated gradient overlay for depth */
+    .stApp::before {
+        content: "";
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        bottom: 0;
+        background: 
+            radial-gradient(circle at 20% 30%, rgba(124, 58, 237, 0.08) 0%, transparent 40%),
+            radial-gradient(circle at 80% 70%, rgba(196, 181, 253, 0.06) 0%, transparent 40%);
+        pointer-events: none;
+        animation: gradientShift 15s ease infinite;
+        z-index: 0;
+    }
+    
+    @keyframes gradientShift {
+        0%, 100% {
+            opacity: 0.7;
+            transform: scale(1);
+        }
+        50% {
+            opacity: 1;
+            transform: scale(1.05);
+        }
     }
     
     /* Hide Streamlit branding */
@@ -387,7 +420,7 @@ with st.sidebar:
 # Main layout
 # -----------------------------------------------------------------------------
 # Split emoji and text to apply gradient only to text
-st.markdown('<h1><span style="filter: none; -webkit-text-fill-color: initial; color: initial; background: none; -webkit-background-clip: initial; background-clip: initial;">📚</span> <span style="background: linear-gradient(135deg, #7c3aed 0%, #c4b5fd 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Insight Mentor – Your Virtual Study Buddy</span></h1>', unsafe_allow_html=True)
+st.markdown('<h1><span style="filter: none; -webkit-text-fill-color: initial; color: initial; background: none; -webkit-background-clip: initial; background-clip: initial;">📚</span> <span style="background: linear-gradient(135deg, #c4b5fd 0%, #f5f5f0 100%); -webkit-background-clip: text; -webkit-text-fill-color: transparent; background-clip: text;">Insight Mentor – Your Virtual Study Buddy</span></h1>', unsafe_allow_html=True)
 
 col_input, col_output = st.columns([1, 1.2])
 
@@ -484,57 +517,11 @@ with col_input:
             st.session_state.quiz_questions = quiz
             st.success("Your study plan & quiz have been generated!")
 
-# ---------------------- Output Column ----------------------
-with col_output:
-    st.subheader("📌 Study Notes")
-    if st.session_state.summary:
-        st.write(st.session_state.summary)
-    else:
-        st.info("Upload your lecture notes & other topics to generate Study Notes & see it here.")
-
-    st.subheader("🧩 Key Concepts")
-    if st.session_state.concepts:
-        st.markdown(", ".join(f"`{c}`" for c in st.session_state.concepts))
-    else:
-        st.info("Key concepts will appear here after you generate Study Notes.")
-
-    st.subheader("🃏 Flashcards")
-    if st.session_state.flashcards:
-        for i, card in enumerate(st.session_state.flashcards, start=1):
-            with st.expander(f"Card {i}: {card.question}"):
-                st.markdown(f"**Answer:** {card.answer}")
-    else:
-        st.info("Flashcards will appear here after you generate Study Notes.")
-
-    st.subheader("🗺️ Today’s Study Plan")
-    if st.session_state.study_plan:
-        for task in st.session_state.study_plan:
-            st.markdown(f"- **{task.title}** – ⏱ {task.estimated_time}")
-            if task.description:
-                st.caption(task.description)
-    else:
-        st.info("Generate a Study Plan to see it here.")
-
-    st.subheader("📝 Quiz")
-    if st.session_state.quiz_questions:
-        for i, q in enumerate(st.session_state.quiz_questions, start=1):
-            st.markdown(f"**Q{i}. {q.text}**")
-    else:
-        st.info("Your quiz will show up here once generated.")
-
-    st.subheader("📊 Concept Mastery (Prototype)")
-    if st.session_state.mastery:
-        for concept, score in st.session_state.mastery.items():
-            st.write(f"{concept}: {int(score * 100)}%")
-            st.progress(min(max(score, 0.0), 1.0))
-    else:
-        st.info("Mastery scores will appear after you generate plans & quizzes.")
-
- # -------------------------------------------------------------------------
-    # Prompt Coach – major-specific example prompts
+    # -------------------------------------------------------------------------
+    # Prompt Tutor – major-specific example prompts
     # -------------------------------------------------------------------------
     st.markdown("---")
-    st.subheader("🧠 Prompt Tutor – Ask Better Questions About Your Notes")
+    st.subheader("🧠 Learn2Prompt – Ask Better Questions About Your Study Notes")
 
     if not st.session_state.raw_text:
         st.info("Upload your study materials & generate Study Notes first to see prompt ideas.")
@@ -564,7 +551,7 @@ with col_output:
         major_prompts: Dict[str, Dict[str, str]] = {
             "Computer Science": {
                 "Explain core concepts simply":
-                    "Explain these notes like you’re a senior software engineer teaching an intern. "
+                    "Explain these notes like you're a senior software engineer teaching an intern. "
                     "Use simple analogies, text-based diagrams, and real-world coding examples.",
                 "Algorithms / data structures focus":
                     "Identify the algorithms or data structures mentioned in these notes and explain when to use each one. "
@@ -576,7 +563,7 @@ with col_output:
             },
             "Nursing": {
                 "Clinical explanation":
-                    "Explain these notes as if you’re teaching a first-year nursing student during clinicals. "
+                    "Explain these notes as if you're teaching a first-year nursing student during clinicals. "
                     "Include symptoms, assessment steps, and safety precautions.",
                 "NCLEX-style questions":
                     "Turn these notes into NCLEX-style multiple choice questions. For each question, provide rationales for why each answer is correct or incorrect.",
@@ -704,3 +691,49 @@ with col_output:
 
                 st.subheader("🤖 Insight Mentor's Response")
                 st.write(response)
+
+# ---------------------- Output Column ----------------------
+with col_output:
+    st.subheader("📌 Study Notes")
+    if st.session_state.summary:
+        st.write(st.session_state.summary)
+    else:
+        st.info("Upload your lecture notes & other topics to generate Study Notes & see it here.")
+
+    st.subheader("🧩 Key Concepts")
+    if st.session_state.concepts:
+        st.markdown(", ".join(f"`{c}`" for c in st.session_state.concepts))
+    else:
+        st.info("Key concepts will appear here after you generate Study Notes.")
+
+    st.subheader("🃏 Flashcards")
+    if st.session_state.flashcards:
+        for i, card in enumerate(st.session_state.flashcards, start=1):
+            with st.expander(f"Card {i}: {card.question}"):
+                st.markdown(f"**Answer:** {card.answer}")
+    else:
+        st.info("Flashcards will appear here after you generate Study Notes.")
+
+    st.subheader("🗺️ Today’s Study Plan")
+    if st.session_state.study_plan:
+        for task in st.session_state.study_plan:
+            st.markdown(f"- **{task.title}** – ⏱ {task.estimated_time}")
+            if task.description:
+                st.caption(task.description)
+    else:
+        st.info("Generate a Study Plan to see it here.")
+
+    st.subheader("📝 Quiz")
+    if st.session_state.quiz_questions:
+        for i, q in enumerate(st.session_state.quiz_questions, start=1):
+            st.markdown(f"**Q{i}. {q.text}**")
+    else:
+        st.info("Your quiz will show up here once generated.")
+
+    st.subheader("📊 Concept Mastery (Prototype)")
+    if st.session_state.mastery:
+        for concept, score in st.session_state.mastery.items():
+            st.write(f"{concept}: {int(score * 100)}%")
+            st.progress(min(max(score, 0.0), 1.0))
+    else:
+        st.info("Mastery scores will appear after you generate plans & quizzes.")
