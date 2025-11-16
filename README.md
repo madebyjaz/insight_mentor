@@ -45,6 +45,12 @@ Track your progress across topics you upload (e.g., Networking, Biology, Account
 - Plain text  
 
 ---
+## 🧪 Using Insight Mentor
+Not sure how a feature works? 
+
+[Visit the project’s GitBook for full documentation →](https://insightmentor.gitbook.io/insightmentor-docs/)
+
+---
 
 ## 🧩 How Does Insight Mentor Work?
 
@@ -107,12 +113,6 @@ The system automatically handles API calls, rate limiting, and error recovery. U
 | Extraction | PyPDF, Unstructured |
 | Embeddings | Local vector store |
 | Deployment | Streamlit Cloud / Local |
-
----
-## 🧪 Using Insight Mentor
-Not sure how a feature works? 
-
-[Visit the project’s GitBook for full documentation →](https://insightmentor.gitbook.io/insightmentor-docs/)
 
 ---
 
